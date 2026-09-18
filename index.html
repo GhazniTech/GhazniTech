@@ -1,29 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لیست خرید موبایل</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لیست خرید موبایل - آنلاین</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f3f5f7;font-family:Tahoma,Arial,sans-serif;color:#222;padding:15px}
-.container{max-width:1000px;margin:auto;background:#fff;padding:18px;border-radius:15px;box-shadow:0 3px 15px #0002}
-h1{text-align:center;font-size:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
-input,button{width:100%;padding:12px;margin:4px 0;border-radius:9px;border:1px solid #ccc;font-size:15px}
-button{border:0;background:#1976d2;color:white;cursor:pointer}
-button.red{background:#d32f2f}
-button.gray{background:#555}
-.info{background:#eef6ff;padding:10px;border-radius:9px;margin:10px 0}
-table{width:100%;border-collapse:collapse;margin-top:15px}
-th,td{border:1px solid #ddd;padding:8px;text-align:right}
-th{background:#eee}
-@media(max-width:600px){table{font-size:12px}th,td{padding:5px}}
+body{font-family:Tahoma,Arial,sans-serif;background:#f3f5f7;margin:0;padding:15px;color:#222}
+.card{max-width:1000px;margin:auto;background:#fff;padding:18px;border-radius:16px;box-shadow:0 3px 15px #0001}
+h1{text-align:center;font-size:24px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+input,button{width:100%;box-sizing:border-box;padding:11px;margin:4px 0;border:1px solid #ccc;border-radius:9px;font-size:15px}
+button{background:#1769aa;color:#fff;border:0;cursor:pointer}.red{background:#c62828}.gray{background:#555}
+.status{padding:10px;background:#eef6ff;border-radius:9px;margin:10px 0}
+table{width:100%;border-collapse:collapse;margin-top:15px;font-size:14px}
+th,td{border:1px solid #ddd;padding:8px;text-align:right}th{background:#eee}
+.small{font-size:12px;color:#666}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="container">
+<div class="card">
 <h1>لیست خرید موبایل</h1>
+
+<div class="status" id="status">در حال اتصال به دیتابیس آنلاین...</div>
 
 <div class="grid">
 <input id="name" placeholder="نام">
@@ -40,47 +38,51 @@ th{background:#eee}
 
 <input id="search" placeholder="جستجو..." oninput="render()">
 
-<div class="info">
-اطلاعات در این مرورگر ذخیره می‌شود و برای استفاده در چند گوشی، می‌توانی فایل داده را در GitHub نگهداری کنی.
-</div>
-
-<div class="grid">
-<button onclick="downloadData()">دانلود پشتیبان</button>
-<button onclick="document.getElementById('fileInput').click()">وارد کردن پشتیبان</button>
-<input id="fileInput" type="file" accept=".json" style="display:none" onchange="importData(event)">
-</div>
-
 <table>
-<thead>
-<tr>
-<th>نام</th>
-<th>موبایل</th>
-<th>تذکره</th>
-<th>تماس</th>
-<th>IMEI</th>
-<th>عملیات</th>
-</tr>
-</thead>
+<thead><tr><th>نام</th><th>موبایل</th><th>تذکره</th><th>تماس</th><th>IMEI</th><th>عملیات</th></tr></thead>
 <tbody id="rows"></tbody>
 </table>
+
+<p class="small">این نسخه اطلاعات را مستقیم در دیتابیس Supabase ذخیره می‌کند و برای چند گوشی مشترک است. برای راه‌اندازی، URL پروژه و Publishable Key را در ابتدای کد قرار دهید و SQL همراه فایل را یک‌بار در Supabase اجرا کنید.</p>
 </div>
 
 <script>
+/* ==============================
+   SUPABASE CONFIGURATION
+   این دو مقدار را از پروژه Supabase خودت کپی کن.
+   ============================== */
+const SUPABASE_URL = "https://awamqycreuxktbxhvqdm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Kwv38X5C3oeOmFEVvIN2hw_T1spSU3S";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let records=[];
-let editIndex=-1;
+let editId=null;
 
-function load(){
-  try{records=JSON.parse(localStorage.getItem("mobile_records")||"[]")}
-  catch(e){records=[]}
-  render();
+function setStatus(msg,ok=false){
+  const el=document.getElementById("status");
+  el.textContent=msg;
+  el.style.background=ok?"#e9f7ef":"#eef6ff";
 }
 
-function saveLocal(){
-  localStorage.setItem("mobile_records",JSON.stringify(records));
-  render();
+async function start(){
+  if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_")){
+    setStatus("ابتدا SUPABASE_URL و SUPABASE_KEY را در فایل index.html وارد کن.");
+    return;
+  }
+  const {data,error}=await db.auth.signInAnonymously();
+  if(error){setStatus("ورود به Supabase ناموفق است: "+error.message);return}
+  await loadRecords();
 }
 
-function saveRecord(){
+async function loadRecords(){
+  const {data,error}=await db.from("mobile_records").select("*").order("created_at",{ascending:false});
+  if(error){setStatus("خطا در دریافت اطلاعات: "+error.message);return}
+  records=data||[];
+  render();
+  setStatus("اتصال برقرار است؛ اطلاعات آنلاین بارگذاری شد.",true);
+}
+
+async function saveRecord(){
   const r={
     name:document.getElementById("name").value.trim(),
     mobile:document.getElementById("mobile").value.trim(),
@@ -89,99 +91,59 @@ function saveRecord(){
     imei:document.getElementById("imei").value.trim()
   };
   if(!r.name&&!r.mobile&&!r.tazkira&&!r.phone&&!r.imei){
-    alert("لطفاً اطلاعات را وارد کنید.");
-    return;
+    alert("حداقل یک اطلاعات را وارد کنید.");return;
   }
-  if(editIndex>=0){
-    records[editIndex]=r;
-    editIndex=-1;
+
+  let result;
+  if(editId){
+    result=await db.from("mobile_records").update(r).eq("id",editId);
   }else{
-    records.push(r);
+    result=await db.from("mobile_records").insert(r);
   }
-  saveLocal();
+  if(result.error){alert("ذخیره نشد: "+result.error.message);return}
   clearForm();
+  await loadRecords();
 }
 
-function editRecord(i){
-  const r=records[i];
-  document.getElementById("name").value=r.name||"";
-  document.getElementById("mobile").value=r.mobile||"";
-  document.getElementById("tazkira").value=r.tazkira||"";
-  document.getElementById("phone").value=r.phone||"";
-  document.getElementById("imei").value=r.imei||"";
-  editIndex=i;
-  window.scrollTo({top:0,behavior:"smooth"});
+function editRecord(id){
+  const r=records.find(x=>x.id===id); if(!r)return;
+  name.value=r.name||"";mobile.value=r.mobile||"";tazkira.value=r.tazkira||"";
+  phone.value=r.phone||"";imei.value=r.imei||"";
+  editId=id;window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function deleteRecord(i){
-  if(confirm("این اطلاعات حذف شود؟")){
-    records.splice(i,1);
-    saveLocal();
-  }
+async function deleteRecord(id){
+  if(!confirm("این اطلاعات حذف شود؟"))return;
+  const {error}=await db.from("mobile_records").delete().eq("id",id);
+  if(error){alert("حذف نشد: "+error.message);return}
+  await loadRecords();
 }
 
 function clearForm(){
   ["name","mobile","tazkira","phone","imei"].forEach(id=>document.getElementById(id).value="");
-  editIndex=-1;
+  editId=null;
 }
 
 function esc(v){
-  return String(v||"").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
+  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
 function render(){
   const q=document.getElementById("search").value.trim().toLowerCase();
-  const tbody=document.getElementById("rows");
-  tbody.innerHTML="";
-  records.forEach((r,i)=>{
-    const all=Object.values(r).join(" ").toLowerCase();
-    if(q && !all.includes(q)) return;
-    tbody.innerHTML+=`
-    <tr>
-      <td>${esc(r.name)}</td>
-      <td>${esc(r.mobile)}</td>
-      <td>${esc(r.tazkira)}</td>
-      <td>${esc(r.phone)}</td>
-      <td>${esc(r.imei)}</td>
-      <td>
-        <button onclick="editRecord(${i})">ویرایش</button>
-        <button class="red" onclick="deleteRecord(${i})">حذف</button>
-      </td>
+  const tbody=document.getElementById("rows"); tbody.innerHTML="";
+  records.forEach(r=>{
+    const all=[r.name,r.mobile,r.tazkira,r.phone,r.imei].join(" ").toLowerCase();
+    if(q&&!all.includes(q))return;
+    tbody.innerHTML+=`<tr>
+      <td>${esc(r.name)}</td><td>${esc(r.mobile)}</td><td>${esc(r.tazkira)}</td>
+      <td>${esc(r.phone)}</td><td>${esc(r.imei)}</td>
+      <td><button onclick="editRecord('${r.id}')">ویرایش</button>
+      <button class="red" onclick="deleteRecord('${r.id}')">حذف</button></td>
     </tr>`;
   });
 }
-
-function downloadData(){
-  const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="data.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function importData(event){
-  const file=event.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const data=JSON.parse(reader.result);
-      if(!Array.isArray(data))throw new Error();
-      records=data;
-      saveLocal();
-      alert("اطلاعات وارد شد.");
-    }catch(e){
-      alert("فایل پشتیبان معتبر نیست.");
-    }
-    event.target.value="";
-  };
-  reader.readAsText(file);
-}
-
-load();
+start();
 </script>
 </body>
 </html>
+
