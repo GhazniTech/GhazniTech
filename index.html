@@ -1,52 +1,1356 @@
-<!doctype html>
+```html
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>کارهای روزمره</title>
-  <link rel="stylesheet" href="style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: Tahoma, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      max-width: 850px;
+      margin: auto;
+      padding: 18px 14px 60px;
+    }
+
+    .topbar {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      border-radius: 22px;
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      opacity: .65;
+      margin-bottom: 5px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    .today {
+      margin-top: 8px;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    button,
+    a {
+      font-family: inherit;
+    }
+
+    .primary,
+    .secondary {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .settings {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 14px;
+      box-shadow: 0 5px 18px #0f172a0b;
+    }
+
+    .settings h2 {
+      margin: 0 0 5px;
+      font-size: 17px;
+    }
+
+    .settings p {
+      margin: 0 0 15px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    label {
+      display: block;
+      margin: 11px 0;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px;
+      border: 1px solid #dbe2ea;
+      border-radius: 12px;
+      background: white;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #2563eb;
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .success {
+      color: #15803d;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 17px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 5px 18px #0f172a0b;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 23px;
+    }
+
+    .stat span {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .task {
+      background: white;
+      border-radius: 18px;
+      padding: 15px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+      box-shadow: 0 5px 18px #0f172a0b;
+    }
+
+    .task.done {
+      opacity: .62;
+    }
+
+    .task.done .task-title {
+      text-decoration: line-through;
+    }
+
+    .check-btn {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      border: 2px solid #94a3b8;
+      background: white;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .task.done .check-btn {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+
+    .task.done .check-btn::after {
+      content: "✓";
+      color: white;
+      position: absolute;
+      left: 4px;
+      top: 0;
+      font-size: 16px;
+    }
+
+    .task-title {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .details {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 5px;
+      white-space: pre-wrap;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      background: #f1f5f9;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .actions button {
+      border: 0;
+      background: #f1f5f9;
+      border-radius: 9px;
+      padding: 7px 9px;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 50px 10px;
+      color: #64748b;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: white;
+      padding: 11px 17px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media(max-width:560px) {
+
+      .app {
+        padding: 12px;
+      }
+
+      .topbar {
+        padding: 18px;
+        border-radius: 19px;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+
+      .topbar .primary {
+        padding: 9px 11px;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        gap: 7px;
+      }
+
+      .stat {
+        padding: 12px 5px;
+      }
+
+      .task {
+        grid-template-columns: auto 1fr;
+      }
+
+      .actions {
+        grid-column: 2;
+      }
+
+      .settings-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="app">
+
+  <!-- Header -->
+  <header class="topbar">
+
+    <div>
+      <div class="eyebrow">مدیریت کارهای روزمره</div>
+
+      <h1>کارهای من</h1>
+
+      <div class="today" id="today">
+        در حال دریافت تاریخ...
+      </div>
+    </div>
+
+    <a href="add.html" class="primary">
+      + افزودن کار
+    </a>
+
+  </header>
+
+
+  <!-- Supabase Settings -->
+  <section class="settings">
+
+    <h2>اتصال به Supabase</h2>
+
+    <p>
+      برای نمایش و ذخیره کارها، اطلاعات پروژه Supabase خود را وارد کنید.
+    </p>
+
+    <label>
+      Supabase Project URL
+
+      <input
+        id="supabaseUrl"
+        type="url"
+        placeholder="https://xxxxxxxx.supabase.co"
+      >
+    </label>
+
+
+    <label>
+      Supabase Publishable Key
+
+      <input
+        id="supabaseKey"
+        type="password"
+        placeholder="sb_publishable_..."
+      >
+    </label>
+
+
+    <div class="settings-actions">
+
+      <button
+        id="connectBtn"
+        class="primary"
+        type="button"
+      >
+        اتصال و بارگذاری کارها
+      </button>
+
+      <button
+        id="clearBtn"
+        class="secondary"
+        type="button"
+      >
+        پاک کردن تنظیمات
+      </button>
+
+    </div>
+
+    <div id="connectionStatus" class="status">
+      اتصال تنظیم نشده است.
+    </div>
+
+  </section>
+
+
+  <!-- Statistics -->
+  <section class="stats">
+
+    <div class="stat">
+      <b id="total">۰</b>
+      <span>همه کارها</span>
+    </div>
+
+    <div class="stat">
+      <b id="todo">۰</b>
+      <span>انجام نشده</span>
+    </div>
+
+    <div class="stat">
+      <b id="done">۰</b>
+      <span>انجام شده</span>
+    </div>
+
+  </section>
+
+
+  <!-- Search / Filter -->
+  <section class="toolbar">
+
+    <input
+      id="search"
+      type="search"
+      placeholder="جستجوی کار..."
+    >
+
+    <select id="filter">
+
+      <option value="all">
+        همه
+      </option>
+
+      <option value="todo">
+        انجام نشده
+      </option>
+
+      <option value="done">
+        انجام شده
+      </option>
+
+    </select>
+
+  </section>
+
+
+  <!-- Tasks -->
+  <section id="list" class="task-list">
+
+    <div class="loading">
+      برای نمایش کارها به Supabase متصل شوید.
+    </div>
+
+  </section>
+
+
+  <div
+    id="empty"
+    class="empty hidden"
+  >
+    هنوز کاری ثبت نشده است.
+  </div>
+
+</main>
+
+
+<div id="toast" class="toast"></div>
+
+
 <script>
-  // ==============================
-  // Supabase تنظیمات
-  // ==============================
-  const SUPABASE_PROJECT_URL = "https://dfompmqpkkbyauzkypfh.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YCOOcFrgEfSKzZ-ZVlkf2w_C8X1Vwvi";
+
+let supabaseClient = null;
+let tasks = [];
+
+const $ = id => document.getElementById(id);
+
+
+/* =========================
+   Persian digits
+========================= */
+
+function faDigits(value) {
+
+  return String(value).replace(
+    /\d/g,
+    d => "۰۱۲۳۴۵۶۷۸۹"[d]
+  );
+
+}
+
+
+/* =========================
+   Gregorian → Jalali
+========================= */
+
+function gregorianToJalali(gy, gm, gd) {
+
+  const gdm = [
+    0,31,59,90,120,151,
+    181,212,243,273,304,334
+  ];
+
+  let gy2 = gy + (gm > 2 ? 1 : 0);
+
+  let days =
+    355666 +
+    365 * gy +
+    Math.floor((gy2 + 3) / 4) -
+    Math.floor((gy2 + 99) / 100) +
+    Math.floor((gy2 + 399) / 400) +
+    gd +
+    gdm[gm - 1];
+
+  let jy = -1595 + 33 * Math.floor(days / 12053);
+
+  days %= 12053;
+
+  jy += 4 * Math.floor(days / 1461);
+
+  days %= 1461;
+
+  if (days > 365) {
+
+    jy += Math.floor((days - 1) / 365);
+
+    days = (days - 1) % 365;
+
+  }
+
+  let jm =
+    days < 186
+      ? 1 + Math.floor(days / 31)
+      : 7 + Math.floor((days - 186) / 30);
+
+  let jd =
+    1 +
+    (
+      days < 186
+        ? days % 31
+        : (days - 186) % 30
+    );
+
+  return [jy, jm, jd];
+
+}
+
+
+/* =========================
+   Today
+========================= */
+
+function jalaliToday() {
+
+  const d = new Date();
+
+  const j = gregorianToJalali(
+    d.getFullYear(),
+    d.getMonth() + 1,
+    d.getDate()
+  );
+
+  return (
+    faDigits(j[0]) +
+    "/" +
+    faDigits(String(j[1]).padStart(2,"0")) +
+    "/" +
+    faDigits(String(j[2]).padStart(2,"0"))
+  );
+
+}
+
+
+/* =========================
+   Registration date/time
+========================= */
+
+function registrationDisplay(value) {
+
+  if (!value) return "";
+
+  const d = new Date(value);
+
+  if (isNaN(d.getTime())) {
+    return "";
+  }
+
+  const j = gregorianToJalali(
+    d.getFullYear(),
+    d.getMonth() + 1,
+    d.getDate()
+  );
+
+  let h = d.getHours();
+
+  const minutes =
+    String(d.getMinutes()).padStart(2,"0");
+
+  const ampm =
+    h >= 12 ? "PM" : "AM";
+
+  h = h % 12 || 12;
+
+  return (
+    faDigits(j[0]) +
+    "/" +
+    faDigits(String(j[1]).padStart(2,"0")) +
+    "/" +
+    faDigits(String(j[2]).padStart(2,"0")) +
+    " — " +
+    faDigits(h) +
+    ":" +
+    faDigits(minutes) +
+    " " +
+    ampm
+  );
+
+}
+
+
+/* =========================
+   HTML escape
+========================= */
+
+function esc(value) {
+
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[c])
+  );
+
+}
+
+
+/* =========================
+   Toast
+========================= */
+
+function toast(message) {
+
+  const el = $("toast");
+
+  el.textContent = message;
+
+  el.classList.add("show");
+
+  setTimeout(() => {
+
+    el.classList.remove("show");
+
+  }, 2500);
+
+}
+
+
+/* =========================
+   Connect Supabase
+========================= */
+
+function connectSupabase() {
+
+  const url =
+    $("supabaseUrl").value.trim();
+
+  const key =
+    $("supabaseKey").value.trim();
+
+
+  if (!url || !key) {
+
+    $("connectionStatus").textContent =
+      "لطفاً Project URL و Publishable Key را وارد کنید.";
+
+    $("connectionStatus").className =
+      "status error";
+
+    return false;
+
+  }
+
+
+  try {
+
+    supabaseClient =
+      window.supabase.createClient(
+        url,
+        key
+      );
+
+
+    /*
+      ذخیره تنظیمات برای add.html
+      تا هر دو صفحه از یک اتصال استفاده کنند.
+    */
+
+    localStorage.setItem(
+      "daily_supabase_url",
+      url
+    );
+
+    localStorage.setItem(
+      "daily_supabase_key",
+      key
+    );
+
+
+    $("connectionStatus").textContent =
+      "✓ اتصال برقرار شد. در حال دریافت کارها...";
+
+    $("connectionStatus").className =
+      "status success";
+
+
+    return true;
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    $("connectionStatus").textContent =
+      "خطا در ساخت اتصال Supabase.";
+
+    $("connectionStatus").className =
+      "status error";
+
+    return false;
+
+  }
+
+}
+
+
+/* =========================
+   Load Tasks
+========================= */
+
+async function loadTasks() {
+
+  if (!supabaseClient) {
+
+    return;
+
+  }
+
+
+  $("list").innerHTML =
+    '<div class="loading">در حال دریافت کارها...</div>';
+
+
+  const result =
+    await supabaseClient
+      .from("daily_tasks")
+      .select("*")
+      .order(
+        "registered_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (result.error) {
+
+    console.error(
+      "Supabase error:",
+      result.error
+    );
+
+
+    $("connectionStatus").textContent =
+      "خطا در دریافت کارها: " +
+      result.error.message;
+
+    $("connectionStatus").className =
+      "status error";
+
+
+    $("list").innerHTML =
+      '<div class="loading">دریافت کارها انجام نشد.</div>';
+
+    return;
+
+  }
+
+
+  tasks = result.data || [];
+
+
+  $("connectionStatus").textContent =
+    "✓ " +
+    faDigits(tasks.length) +
+    " کار دریافت شد.";
+
+  $("connectionStatus").className =
+    "status success";
+
+
+  render();
+
+}
+
+
+/* =========================
+   Render
+========================= */
+
+function render() {
+
+  const search =
+    $("search").value
+      .trim()
+      .toLowerCase();
+
+  const filter =
+    $("filter").value;
+
+
+  const filtered =
+    tasks.filter(task => {
+
+      const text =
+        (
+          (task.title || "") +
+          " " +
+          (task.details || "")
+        ).toLowerCase();
+
+
+      const searchMatch =
+        !search ||
+        text.includes(search);
+
+
+      let filterMatch = true;
+
+
+      if (filter === "done") {
+
+        filterMatch = task.done === true;
+
+      }
+
+
+      if (filter === "todo") {
+
+        filterMatch = task.done !== true;
+
+      }
+
+
+      return searchMatch && filterMatch;
+
+    });
+
+
+  if (filtered.length === 0) {
+
+    $("list").innerHTML = "";
+
+    $("empty").classList.remove(
+      "hidden"
+    );
+
+  }
+
+  else {
+
+    $("empty").classList.add(
+      "hidden"
+    );
+
+
+    $("list").innerHTML =
+      filtered.map(task => `
+
+        <article
+          class="task ${task.done ? "done" : ""}"
+        >
+
+          <button
+            class="check-btn"
+            onclick="toggleTask('${task.id}')"
+          ></button>
+
+
+          <div>
+
+            <div class="task-title">
+              ${esc(task.title)}
+            </div>
+
+
+            ${
+              task.details
+                ? `
+                  <div class="details">
+                    ${esc(task.details)}
+                  </div>
+                `
+                : ""
+            }
+
+
+            <div class="meta">
+
+              ${
+                task.registered_at
+                  ? `
+                    <span class="pill">
+                      🕒 ثبت:
+                      ${registrationDisplay(
+                        task.registered_at
+                      )}
+                    </span>
+                  `
+                  : ""
+              }
+
+
+              ${
+                task.reminder
+                  ? `
+                    <span class="pill">
+                      🔔 یادآوری
+                    </span>
+                  `
+                  : ""
+              }
+
+
+              <span class="pill">
+
+                ${
+                  task.done
+                    ? "✓ انجام شده"
+                    : "○ انجام نشده"
+                }
+
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="actions">
+
+            <button
+              onclick="editTask('${task.id}')"
+            >
+              ✏️
+            </button>
+
+            <button
+              onclick="deleteTask('${task.id}')"
+            >
+              🗑️
+            </button>
+
+          </div>
+
+        </article>
+
+      `).join("");
+
+  }
+
+
+  const total =
+    tasks.length;
+
+  const done =
+    tasks.filter(
+      t => t.done === true
+    ).length;
+
+  const todo =
+    total - done;
+
+
+  $("total").textContent =
+    faDigits(total);
+
+  $("done").textContent =
+    faDigits(done);
+
+  $("todo").textContent =
+    faDigits(todo);
+
+}
+
+
+/* =========================
+   Toggle Done
+========================= */
+
+async function toggleTask(id) {
+
+  if (!supabaseClient) {
+
+    toast("ابتدا به Supabase وصل شوید.");
+
+    return;
+
+  }
+
+
+  const task =
+    tasks.find(
+      t => t.id === id
+    );
+
+
+  if (!task) return;
+
+
+  const result =
+    await supabaseClient
+      .from("daily_tasks")
+      .update({
+        done: !task.done
+      })
+      .eq("id", id);
+
+
+  if (result.error) {
+
+    toast(
+      "خطا در تغییر وضعیت کار."
+    );
+
+    console.error(result.error);
+
+    return;
+
+  }
+
+
+  await loadTasks();
+
+}
+
+
+/* =========================
+   Delete
+========================= */
+
+async function deleteTask(id) {
+
+  if (!supabaseClient) {
+
+    toast("ابتدا به Supabase وصل شوید.");
+
+    return;
+
+  }
+
+
+  if (
+    !confirm(
+      "آیا مطمئن هستید این کار حذف شود؟"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const result =
+    await supabaseClient
+      .from("daily_tasks")
+      .delete()
+      .eq("id", id);
+
+
+  if (result.error) {
+
+    toast(
+      "خطا در حذف کار."
+    );
+
+    console.error(result.error);
+
+    return;
+
+  }
+
+
+  toast(
+    "کار حذف شد."
+  );
+
+
+  await loadTasks();
+
+}
+
+
+/* =========================
+   Edit
+========================= */
+
+async function editTask(id) {
+
+  if (!supabaseClient) {
+
+    toast("ابتدا به Supabase وصل شوید.");
+
+    return;
+
+  }
+
+
+  const task =
+    tasks.find(
+      t => t.id === id
+    );
+
+
+  if (!task) return;
+
+
+  const title =
+    prompt(
+      "عنوان کار:",
+      task.title
+    );
+
+
+  if (title === null) return;
+
+
+  const details =
+    prompt(
+      "جزئیات:",
+      task.details || ""
+    );
+
+
+  if (details === null) return;
+
+
+  if (!title.trim()) {
+
+    toast(
+      "عنوان نمی‌تواند خالی باشد."
+    );
+
+    return;
+
+  }
+
+
+  const result =
+    await supabaseClient
+      .from("daily_tasks")
+      .update({
+        title: title.trim(),
+        details:
+          details.trim() || null
+      })
+      .eq("id", id);
+
+
+  if (result.error) {
+
+    toast(
+      "خطا در ویرایش."
+    );
+
+    console.error(result.error);
+
+    return;
+
+  }
+
+
+  toast(
+    "کار ویرایش شد."
+  );
+
+
+  await loadTasks();
+
+}
+
+
+/* =========================
+   Connect button
+========================= */
+
+$("connectBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      if (
+        connectSupabase()
+      ) {
+
+        await loadTasks();
+
+      }
+
+    }
+  );
+
+
+/* =========================
+   Clear settings
+========================= */
+
+$("clearBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      localStorage.removeItem(
+        "daily_supabase_url"
+      );
+
+      localStorage.removeItem(
+        "daily_supabase_key"
+      );
+
+
+      $("supabaseUrl").value = "";
+
+      $("supabaseKey").value = "";
+
+      supabaseClient = null;
+
+      tasks = [];
+
+      render();
+
+
+      $("connectionStatus").textContent =
+        "تنظیمات پاک شد.";
+
+      $("connectionStatus").className =
+        "status";
+
+
+    }
+  );
+
+
+/* =========================
+   Search
+========================= */
+
+$("search")
+  .addEventListener(
+    "input",
+    render
+  );
+
+
+$("filter")
+  .addEventListener(
+    "change",
+    render
+  );
+
+
+/* =========================
+   Load saved credentials
+========================= */
+
+$("supabaseUrl").value =
+  localStorage.getItem(
+    "daily_supabase_url"
+  ) || "";
+
+
+$("supabaseKey").value =
+  localStorage.getItem(
+    "daily_supabase_key"
+  ) || "";
+
+
+/* =========================
+   Initial page
+========================= */
+
+$("today").textContent =
+  "امروز: " +
+  jalaliToday();
+
+
+/*
+  اگر قبلاً URL و Key ذخیره شده،
+  خودکار وصل شو و کارها را بگیر.
+*/
+
+if (
+  $("supabaseUrl").value &&
+  $("supabaseKey").value
+) {
+
+  if (connectSupabase()) {
+
+    loadTasks();
+
+  }
+
+}
+
 </script>
 
-</head>
-<body>
-  <main class="app">
-    <header class="topbar">
-	<a class="secondary back-link" href="add.html">افزودن</a>
-      <div>
-        <div class="eyebrow">برنامه شخصی</div>
-        <h1>کارهای روزمره</h1>
-        <div id="today" class="today"></div>
-      </div>
-    </header>
-
-    <section class="stats">
-      <div><b id="totalCount">۰</b><span>همه</span></div>
-      <div><b id="pendingCount">۰</b><span>باقی‌مانده</span></div>
-      <div><b id="doneCount">۰</b><span>انجام‌شده</span></div>
-    </section>
-
-    <section class="toolbar">
-      <input id="search" placeholder="جستجوی کار..." autocomplete="off">
-      <select id="filter">
-        <option value="all">همه کارها</option>
-        <option value="pending">انجام‌نشده</option>
-        <option value="done">انجام‌شده</option>
-      </select>
-    </section>
-
-    <section id="list" class="task-list"></section>
-    <div id="empty" class="empty hidden">هنوز کاری ثبت نشده است.</div>
-  </main>
-<div id="toast" class="toast"></div>
-  <script src="app.js"></script>
 </body>
 </html>
+```
