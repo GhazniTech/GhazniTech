@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>افزودن کار جدید</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">مدیریت کارها</div>
+      <h1>افزودن کار جدید</h1>
+      <div class="today" id="currentNow">در حال دریافت زمان...</div>
+    </div>
+    <a class="secondary back-link" href="index.html">← برگشت</a>
+  </header>
+
+  <section class="settings-card">
+    <h2>اتصال به Supabase</h2>
+    <label>
+      Supabase Project URL
+      <input id="supabaseUrl" type="url" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off">
+    </label>
+    <label>
+      Supabase Publishable Key
+      <input id="supabaseKey" type="password" placeholder="sb_publishable_..." autocomplete="off">
+    </label>
+    <button id="connectBtn" class="secondary" type="button">ذخیره تنظیمات اتصال</button>
+    <div id="connectionStatus" class="status"></div>
+  </section>
+
+  <section class="add-card">
+    <div class="auto-register-note">
+      🕒 تاریخ و ساعت ثبت کاملاً خودکار است. لحظه‌ای که «ثبت کار» را می‌زنید، زمان فعلی ذخیره می‌شود.
+    </div>
+
+    <form id="newTaskForm">
+      <label>
+        عنوان کار *
+        <input id="title" required maxlength="200" placeholder="مثلاً: مطالعه، خرید، تماس...">
+      </label>
+
+      <label>
+        جزئیات
+        <textarea id="details" maxlength="2000" placeholder="جزئیات کار را بنویسید..."></textarea>
+      </label>
+
+      <label class="check">
+        <input id="reminder" type="checkbox">
+        یادآوری
+      </label>
+
+      <div id="error" class="error"></div>
+
+      <div class="modal-actions">
+        <a class="secondary" href="index.html">انصراف</a>
+        <button id="submitBtn" class="primary" type="submit">ثبت کار</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let sb=null;
+
+function faDigits(s){return String(s).replace(/\d/g,d=>"۰۱۲۳۴۵۶۷۸۹"[d]);}
+function gregorianToJalali(gy,gm,gd){
+  const gdm=[0,31,59,90,120,151,181,212,243,273,304,334];
+  let gy2=gy+(gm>2?1:0),days=355666+365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)+gd+gdm[gm-1];
+  let jy=-1595+33*Math.floor(days/12053); days%=12053;
+  jy+=4*Math.floor(days/1461); days%=1461;
+  if(days>365){jy+=Math.floor((days-1)/365);days=(days-1)%365;}
+  let jm=days<186?1+Math.floor(days/31):7+Math.floor((days-186)/30);
+  let jd=1+(days<186?days%31:(days-186)%30);
+  return [jy,jm,jd];
+}
+function nowDisplay(){
+  const d=new Date(), j=gregorianToJalali(d.getFullYear(),d.getMonth()+1,d.getDate());
+  let h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ap=h>=12?"PM":"AM";h=h%12||12;
+  return `${faDigits(j[0])}/${faDigits(String(j[1]).padStart(2,"0"))}/${faDigits(String(j[2]).padStart(2,"0"))} — ${faDigits(h)}:${faDigits(String(m).padStart(2,"0"))}:${faDigits(String(s).padStart(2,"0"))} ${ap}`;
+}
+function refreshClock(){$("currentNow").textContent="زمان فعلی: "+nowDisplay();}
+refreshClock(); setInterval(refreshClock,1000);
+
+function loadConfig(){
+  $("supabaseUrl").value=localStorage.getItem("daily_supabase_url")||"";
+  $("supabaseKey").value=localStorage.getItem("daily_supabase_key")||"";
+  connect(false);
+}
+function connect(show=true){
+  const url=$("supabaseUrl").value.trim(),key=$("supabaseKey").value.trim();
+  if(!url||!key){
+    $("connectionStatus").textContent="URL و Publishable Key را وارد کنید.";
+    sb=null; return false;
+  }
+  try{
+    sb=window.supabase.createClient(url,key);
+    localStorage.setItem("daily_supabase_url",url);
+    localStorage.setItem("daily_supabase_key",key);
+    $("connectionStatus").textContent="✓ اتصال آماده است";
+    if(show) $("connectionStatus").className="status success";
+    return true;
+  }catch(e){
+    sb=null;$("connectionStatus").textContent="خطا در تنظیم اتصال";return false;
+  }
+}
+$("connectBtn").addEventListener("click",()=>connect(true));
+
+$("newTaskForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  $("error").textContent="";
+  if(!sb && !connect(false)){
+    $("error").textContent="ابتدا اتصال Supabase را تنظیم کنید.";
+    return;
+  }
+
+  const btn=$("submitBtn");
+  btn.disabled=true;
+  btn.textContent="در حال ثبت...";
+
+  try{
+    const now=new Date();
+    const payload={
+      title:$("title").value.trim(),
+      details:$("details").value.trim()||null,
+      reminder:$("reminder").checked,
+      registered_at:now.toISOString(),
+      task_date:now.toISOString().slice(0,10)
+    };
+
+    if(!payload.title){
+      $("error").textContent="عنوان کار را وارد کنید.";
+      return;
+    }
+
+    const {error}=await sb.from("daily_tasks").insert(payload);
+    if(error) throw error;
+
+    window.location.href="index.html?added=1";
+  }catch(err){
+    console.error(err);
+    $("error").textContent="ثبت نشد: "+(err.message||"خطای نامشخص");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="ثبت کار";
+  }
+});
+
+loadConfig();
+</script>
+</body>
+</html>

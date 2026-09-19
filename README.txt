@@ -1,20 +1,21 @@
-پروژه لیست کارهای روزمره + Supabase — نسخه نهایی
+نسخه جداگانه افزودن کار
 
-ویژگی مهم این نسخه:
-- هنگام افزودن کار، کاربر دیگر تاریخ یا ساعت انتخاب نمی‌کند.
-- تاریخ و ساعت دقیق همان لحظه‌ای که روی «ذخیره» کلیک می‌شود، خودکار در registered_at ذخیره می‌شود.
-- تاریخ ثبت در کارت کار به تقویم خورشیدی نمایش داده می‌شود.
-- ساعت ثبت به صورت ۱۲ ساعته AM/PM نمایش داده می‌شود.
-- هنگام ویرایش، زمان اصلی ثبت کار تغییر نمی‌کند.
+ساختار:
+- index.html = صفحه اصلی، نمایش/ویرایش/حذف کارها
+- add.html = صفحه جداگانه برای ثبت کار جدید
+- style.css = طراحی
+- app.js = مدیریت صفحه اصلی
+- supabase.sql = ساخت جدول
 
-Supabase:
-در فایل index.html دو مقدار زیر را وارد کنید:
-const SUPABASE_PROJECT_URL = "https://xxxxxxxx.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_...";
+روش استفاده:
+1. supabase.sql را در Supabase اجرا کنید.
+2. index.html را باز کنید و روی «افزودن کار» بزنید.
+3. صفحه add.html باز می‌شود.
+4. Supabase Project URL و Publishable Key را وارد و ذخیره کنید.
+5. عنوان و جزئیات را وارد کنید و «ثبت کار» را بزنید.
+6. تاریخ و ساعت همان لحظه به صورت خودکار در registered_at ذخیره می‌شود.
+7. بعد از ثبت موفق، خودکار به index.html برمی‌گردد.
 
-فقط Publishable Key یا anon key را در HTML استفاده کنید؛ service_role/secret key را در مرورگر قرار ندهید.
+تاریخ و ساعت دستی در فرم وجود ندارد.
 
-مراحل:
-1. supabase.sql را در Supabase > SQL Editor اجرا کنید.
-2. index.html را باز کنید و URL و Publishable Key را وارد کنید.
-3. کل فایل‌های پروژه را روی GitHub Pages قرار دهید.
+نکته امنیتی: فقط Publishable/anon key را در HTML استفاده کنید؛ service_role/secret key را در مرورگر نگذارید.

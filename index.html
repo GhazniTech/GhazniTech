@@ -46,33 +46,7 @@
     <section id="list" class="task-list"></section>
     <div id="empty" class="empty hidden">هنوز کاری ثبت نشده است.</div>
   </main>
-
-  <dialog id="taskDialog">
-    <form id="taskForm" method="dialog" class="modal">
-      <div class="modal-head">
-        <h2 id="modalTitle">اضافه کردن کار</h2>
-        <button type="button" id="closeBtn" class="icon-btn">×</button>
-      </div>
-      <input type="hidden" id="taskId">
-      <label>عنوان کار
-        <input id="title" required maxlength="120" placeholder="مثلاً مطالعه">
-      </label>
-      <label>جزئیات
-        <textarea id="details" maxlength="1000" placeholder="توضیحات کار..."></textarea>
-      </label>
-      <div class="grid2">
-      </div>
-      <label class="check"><input id="reminder" type="checkbox"> یادآوری فعال باشد</label>
-      <div class="auto-register-note">🕒 تاریخ و ساعت ثبت این کار هنگام فشردن «ذخیره» به‌صورت خودکار از زمان فعلی ثبت می‌شود.</div>
-<div class="modal-actions">
-        <button type="button" id="cancelBtn" class="secondary">انصراف</button>
-        <button class="primary" type="submit">ذخیره</button>
-      </div>
-      <p id="formError" class="error"></p>
-    </form>
-  </dialog>
-
-  <div id="toast" class="toast"></div>
+<div id="toast" class="toast"></div>
   <script src="app.js"></script>
 </body>
 </html>
