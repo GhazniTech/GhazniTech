@@ -1,149 +1,78 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>لیست خرید موبایل - آنلاین</title>
-<style>
-body{font-family:Tahoma,Arial,sans-serif;background:#f3f5f7;margin:0;padding:15px;color:#222}
-.card{max-width:1000px;margin:auto;background:#fff;padding:18px;border-radius:16px;box-shadow:0 3px 15px #0001}
-h1{text-align:center;font-size:24px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
-input,button{width:100%;box-sizing:border-box;padding:11px;margin:4px 0;border:1px solid #ccc;border-radius:9px;font-size:15px}
-button{background:#1769aa;color:#fff;border:0;cursor:pointer}.red{background:#c62828}.gray{background:#555}
-.status{padding:10px;background:#eef6ff;border-radius:9px;margin:10px 0}
-table{width:100%;border-collapse:collapse;margin-top:15px;font-size:14px}
-th,td{border:1px solid #ddd;padding:8px;text-align:right}th{background:#eee}
-.small{font-size:12px;color:#666}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-<div class="card">
-<h1>لیست خرید موبایل</h1>
-
-<div class="status" id="status">در حال اتصال به دیتابیس آنلاین...</div>
-
-<div class="grid">
-<input id="name" placeholder="نام">
-<input id="mobile" placeholder="نام موبایل">
-<input id="tazkira" placeholder="نمبر تذکره">
-<input id="phone" placeholder="شماره تماس">
-<input id="imei" placeholder="IMEI">
-</div>
-
-<div class="grid">
-<button onclick="saveRecord()">ثبت اطلاعات</button>
-<button class="gray" onclick="clearForm()">پاک کردن</button>
-</div>
-
-<input id="search" placeholder="جستجو..." oninput="render()">
-
-<table>
-<thead><tr><th>نام</th><th>موبایل</th><th>تذکره</th><th>تماس</th><th>IMEI</th><th>عملیات</th></tr></thead>
-<tbody id="rows"></tbody>
-</table>
-
-<p class="small">این نسخه اطلاعات را مستقیم در دیتابیس Supabase ذخیره می‌کند و برای چند گوشی مشترک است. برای راه‌اندازی، URL پروژه و Publishable Key را در ابتدای کد قرار دهید و SQL همراه فایل را یک‌بار در Supabase اجرا کنید.</p>
-</div>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>کارهای روزمره</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* ==============================
-   SUPABASE CONFIGURATION
-   این دو مقدار را از پروژه Supabase خودت کپی کن.
-   ============================== */
-const SUPABASE_URL = "https://awamqycreuxktbxhvqdm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Kwv38X5C3oeOmFEVvIN2hw_T1spSU3S";
-
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let records=[];
-let editId=null;
-
-function setStatus(msg,ok=false){
-  const el=document.getElementById("status");
-  el.textContent=msg;
-  el.style.background=ok?"#e9f7ef":"#eef6ff";
-}
-
-async function start(){
-  if(SUPABASE_URL.includes("PASTE_")||SUPABASE_KEY.includes("PASTE_")){
-    setStatus("ابتدا SUPABASE_URL و SUPABASE_KEY را در فایل index.html وارد کن.");
-    return;
-  }
-  const {data,error}=await db.auth.signInAnonymously();
-  if(error){setStatus("ورود به Supabase ناموفق است: "+error.message);return}
-  await loadRecords();
-}
-
-async function loadRecords(){
-  const {data,error}=await db.from("mobile_records").select("*").order("created_at",{ascending:false});
-  if(error){setStatus("خطا در دریافت اطلاعات: "+error.message);return}
-  records=data||[];
-  render();
-  setStatus("اتصال برقرار است؛ اطلاعات آنلاین بارگذاری شد.",true);
-}
-
-async function saveRecord(){
-  const r={
-    name:document.getElementById("name").value.trim(),
-    mobile:document.getElementById("mobile").value.trim(),
-    tazkira:document.getElementById("tazkira").value.trim(),
-    phone:document.getElementById("phone").value.trim(),
-    imei:document.getElementById("imei").value.trim()
-  };
-  if(!r.name&&!r.mobile&&!r.tazkira&&!r.phone&&!r.imei){
-    alert("حداقل یک اطلاعات را وارد کنید.");return;
-  }
-
-  let result;
-  if(editId){
-    result=await db.from("mobile_records").update(r).eq("id",editId);
-  }else{
-    result=await db.from("mobile_records").insert(r);
-  }
-  if(result.error){alert("ذخیره نشد: "+result.error.message);return}
-  clearForm();
-  await loadRecords();
-}
-
-function editRecord(id){
-  const r=records.find(x=>x.id===id); if(!r)return;
-  name.value=r.name||"";mobile.value=r.mobile||"";tazkira.value=r.tazkira||"";
-  phone.value=r.phone||"";imei.value=r.imei||"";
-  editId=id;window.scrollTo({top:0,behavior:"smooth"});
-}
-
-async function deleteRecord(id){
-  if(!confirm("این اطلاعات حذف شود؟"))return;
-  const {error}=await db.from("mobile_records").delete().eq("id",id);
-  if(error){alert("حذف نشد: "+error.message);return}
-  await loadRecords();
-}
-
-function clearForm(){
-  ["name","mobile","tazkira","phone","imei"].forEach(id=>document.getElementById(id).value="");
-  editId=null;
-}
-
-function esc(v){
-  return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-}
-
-function render(){
-  const q=document.getElementById("search").value.trim().toLowerCase();
-  const tbody=document.getElementById("rows"); tbody.innerHTML="";
-  records.forEach(r=>{
-    const all=[r.name,r.mobile,r.tazkira,r.phone,r.imei].join(" ").toLowerCase();
-    if(q&&!all.includes(q))return;
-    tbody.innerHTML+=`<tr>
-      <td>${esc(r.name)}</td><td>${esc(r.mobile)}</td><td>${esc(r.tazkira)}</td>
-      <td>${esc(r.phone)}</td><td>${esc(r.imei)}</td>
-      <td><button onclick="editRecord('${r.id}')">ویرایش</button>
-      <button class="red" onclick="deleteRecord('${r.id}')">حذف</button></td>
-    </tr>`;
-  });
-}
-start();
+  // ==============================
+  // Supabase تنظیمات
+  // ==============================
+  const SUPABASE_PROJECT_URL = "YOUR_SUPABASE_PROJECT_URL";
+  const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
 </script>
+
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">برنامه شخصی</div>
+        <h1>کارهای روزمره</h1>
+        <div id="today" class="today"></div>
+      </div>
+      <button id="addBtn" class="primary">＋ اضافه</button>
+    </header>
+
+    <section class="stats">
+      <div><b id="totalCount">۰</b><span>همه</span></div>
+      <div><b id="pendingCount">۰</b><span>باقی‌مانده</span></div>
+      <div><b id="doneCount">۰</b><span>انجام‌شده</span></div>
+    </section>
+
+    <section class="toolbar">
+      <input id="search" placeholder="جستجوی کار..." autocomplete="off">
+      <select id="filter">
+        <option value="all">همه کارها</option>
+        <option value="pending">انجام‌نشده</option>
+        <option value="done">انجام‌شده</option>
+      </select>
+    </section>
+
+    <section id="list" class="task-list"></section>
+    <div id="empty" class="empty hidden">هنوز کاری ثبت نشده است.</div>
+  </main>
+
+  <dialog id="taskDialog">
+    <form id="taskForm" method="dialog" class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">اضافه کردن کار</h2>
+        <button type="button" id="closeBtn" class="icon-btn">×</button>
+      </div>
+      <input type="hidden" id="taskId">
+      <label>عنوان کار
+        <input id="title" required maxlength="120" placeholder="مثلاً مطالعه">
+      </label>
+      <label>جزئیات
+        <textarea id="details" maxlength="1000" placeholder="توضیحات کار..."></textarea>
+      </label>
+      <div class="grid2">
+      </div>
+      <label class="check"><input id="reminder" type="checkbox"> یادآوری فعال باشد</label>
+      <div class="auto-register-note">🕒 تاریخ و ساعت ثبت این کار هنگام فشردن «ذخیره» به‌صورت خودکار از زمان فعلی ثبت می‌شود.</div>
+<div class="modal-actions">
+        <button type="button" id="cancelBtn" class="secondary">انصراف</button>
+        <button class="primary" type="submit">ذخیره</button>
+      </div>
+      <p id="formError" class="error"></p>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
 </body>
 </html>
-
